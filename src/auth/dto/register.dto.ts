@@ -1,16 +1,25 @@
-import { IsEmail, IsString, IsOptional } from 'class-validator';
+import { IsEmail, IsString, IsOptional, IsEnum } from 'class-validator';
+import { UserRole } from '../../common/enums/user.enums';
 
 export class RegisterDto {
   @IsString()
-  name: string;
+  name!: string;
 
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
-  password: string;
+  password!: string;
 
+  @IsString()
   @IsOptional()
+  idNumber?: string;
+
   @IsString()
-  role?: 'student' | 'admin' | 'staff';
+  @IsOptional()
+  phoneNumber?: string;
+
+  @IsEnum(UserRole)
+  @IsOptional()
+  role?: UserRole;
 }

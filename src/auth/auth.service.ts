@@ -53,9 +53,19 @@ export class AuthService {
       role: user.role,
     };
 
+    const { password, ...userWithoutPassword } = user;
+
     return {
       access_token: this.jwtService.sign(payload),
-      user,
+      user: userWithoutPassword,
     };
+  }
+
+  async findMe(userId: number) {
+    return this.usersService.findOne(userId);
+  }
+
+  async logout() {
+    return { message: 'Logged out successfully' };
   }
 }
