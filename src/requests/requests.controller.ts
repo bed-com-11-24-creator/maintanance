@@ -11,6 +11,7 @@ import {
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RequestStatus } from './request.entity';
 
 @Controller('requests')
 export class RequestsController {
@@ -41,6 +42,6 @@ export class RequestsController {
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
   updateStatus(@Param('id') id: string, @Body('status') status: string) {
-    return this.requestsService.updateStatus(+id, status);
+    return this.requestsService.updateStatus(+id, status as RequestStatus);
   }
 }

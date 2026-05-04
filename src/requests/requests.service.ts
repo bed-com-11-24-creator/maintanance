@@ -33,7 +33,7 @@ export class RequestsService {
 
   // ✅ MUST BE INSIDE THE CLASS
   async updateStatus(id: number, status: RequestStatus) {
-    const result = await this.requestRepo.update(id, { request });
+    const result = await this.requestRepo.update(id, { status });
 
     if (result.affected === 0) {
       throw new Error('Request not found');

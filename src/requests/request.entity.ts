@@ -18,10 +18,10 @@ export class Request {
   @Column()
   description: string;
 
-  // ✅ Better: explicitly use enum in DB
+  // Oracle does not support enum type — use varchar2 with TS enum for type safety
   @Column({
-    type: 'enum',
-    enum: RequestStatus,
+    type: 'varchar2',
+    length: 20,
     default: RequestStatus.PENDING,
   })
   status: RequestStatus;
