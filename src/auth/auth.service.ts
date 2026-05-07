@@ -12,49 +12,40 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  // REGISTER (INSIDE CLASS)
   async register(dto: RegisterDto) {
     const existingUser = await this.usersService.findByEmail(dto.email);
-
     if (existingUser) {
       throw new UnauthorizedException('User already exists');
     }
-
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-
     const user = await this.usersService.create({
       ...dto,
       password: hashedPassword,
     });
-
     return {
       message: 'User registered successfully',
       user,
     };
   }
 
-  // LOGIN (INSIDE CLASS)
   async login(dto: LoginDto) {
-    const user = await this.usersService.findByEmail(dto.email);
-
+    const user: any = await this.usersService.findByEmail(dto.email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isMatch = await bcrypt.compare(dto.password, user.password);
-
+    const isMatch = await bcrypt.compare(dto.password, user.PASSWORD_HASH);
     if (!isMatch) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const payload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
+      sub: user.ID,
+      email: user.EMAIL,
+      role: user.ROLE,
     };
 
-    const { password, ...userWithoutPassword } = user;
-
+    const { PASSWORD_HASH, ...userWithoutPassword } = user;
     return {
       access_token: this.jwtService.sign(payload),
       user: userWithoutPassword,

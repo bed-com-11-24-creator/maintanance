@@ -1,12 +1,14 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { IssuesService } from './issues.service';
 import { CreateIssueDto } from './dto/create-issue.dto';
 import { UpdateIssueDto } from './dto/update-issue.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { UserRole } from '../users/user.entity';
+import { UserRole } from '../common/enums/user.enums';
 
+@ApiBearerAuth('JWT-auth')
 @Controller('issues')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class IssuesController {
@@ -22,9 +24,9 @@ export class IssuesController {
   findAll(
     @Query('status') status?: string,
     @Query('urgency') urgency?: string,
-    @Query('block') block?: string,
+    @Query('category') category?: string,
   ) {
-    return this.issuesService.findAll({ status, urgency, block });
+    return this.issuesService.findAll({ status, urgency, category });
   }
 
   @Roles(UserRole.STUDENT)
@@ -35,23 +37,23 @@ export class IssuesController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.issuesService.findOne(+id);
+    return this.issuesService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateIssueDto) {
-    return this.issuesService.update(+id, dto);
+    return this.issuesService.update(id, dto);
   }
 
   @Roles(UserRole.ADMINISTRATOR)
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.issuesService.remove(+id);
+    return this.issuesService.remove(id);
   }
 
   @Get(':id/timeline')
   getTimeline(@Param('id') id: string) {
-    return this.issuesService.findOne(+id).then(issue => issue.timelineEntries);
+    return this.issuesService.findOne(id);
   }
 
   @Post(':id/timeline')
@@ -61,6 +63,6 @@ export class IssuesController {
     @Body('event') event: string,
     @Body('description') description: string
   ) {
-    return this.issuesService.addManualTimelineEntry(+id, event, description);
+    return this.issuesService.addManualTimelineEntry(id, event, description);
   }
 }
