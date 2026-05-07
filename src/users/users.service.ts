@@ -1,57 +1,129 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from './user.entity';
+import { getConnection } from '../database/database.providers';
+import oracledb from 'oracledb';
 import { UserRole } from '../common/enums/user.enums';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectRepository(User)
-    private userRepo: Repository<User>,
-  ) {}
 
-  // ✅ FIXED CREATE (NO HASHING HERE)
   async create(data: any) {
-    const user = this.userRepo.create(data);
-    return this.userRepo.save(user);
+    const connection = await getConnection();
+    try {
+      const id = Date.now().toString();
+      await connection.execute(
+        `INSERT INTO USERS (id, full_name, email, password_hash, role, reg_number, phone, is_active, created_at, updated_at)
+         VALUES (:id, :fullName, :email, :passwordHash, :role, :regNumber, :phone, 1, SYSDATE, SYSDATE)`,
+        {
+          id,
+          fullName: data.name,
+          email: data.email,
+          passwordHash: data.password,
+          role: data.role,
+          regNumber: data.idNumber,
+          phone: data.phoneNumber,
+        },
+        { autoCommit: true },
+      );
+      return { id, ...data };
+    } finally {
+      await connection.close();
+    }
   }
 
-  findAll() {
-    return this.userRepo.find({
-      select: ['id', 'name', 'email', 'role', 'idNumber', 'phoneNumber'],
-    });
+  async findAll() {
+    const connection = await getConnection();
+    try {
+      const result = await connection.execute(
+        `SELECT id, full_name, email, role, reg_number, phone FROM USERS`,
+        [],
+        { outFormat: oracledb.OUT_FORMAT_OBJECT },
+      );
+      return result.rows;
+    } finally {
+      await connection.close();
+    }
   }
 
   async findOne(id: number) {
-    const user = await this.userRepo.findOne({
-      where: { id },
-      select: ['id', 'name', 'email', 'role', 'idNumber', 'phoneNumber'],
-    });
-
-    if (!user) throw new NotFoundException('User not found');
-    return user;
+    const connection = await getConnection();
+    try {
+      const result = await connection.execute(
+        `SELECT id, full_name, email, role, reg_number, phone FROM USERS WHERE id = :id`,
+        [id],
+        { outFormat: oracledb.OUT_FORMAT_OBJECT },
+      );
+      if (!result.rows || result.rows.length === 0)
+        throw new NotFoundException('User not found');
+      return result.rows[0];
+    } finally {
+      await connection.close();
+    }
   }
 
-  findByRole(role: UserRole) {
-    return this.userRepo.find({
-      where: { role },
-      select: ['id', 'name', 'email', 'role', 'idNumber', 'phoneNumber'],
-    });
+  async findByRole(role: UserRole) {
+    const connection = await getConnection();
+    try {
+      const result = await connection.execute(
+        `SELECT id, full_name, email, role, reg_number, phone FROM USERS WHERE role = :role`,
+        [role],
+        { outFormat: oracledb.OUT_FORMAT_OBJECT },
+      );
+      return result.rows;
+    } finally {
+      await connection.close();
+    }
   }
 
   async findByEmail(email: string) {
-    return this.userRepo.findOne({ where: { email } });
+    const connection = await getConnection();
+    try {
+      const result = await connection.execute(
+        `SELECT id, full_name, email, password_hash, role, reg_number, phone FROM USERS WHERE email = :email`,
+        [email],
+        { outFormat: oracledb.OUT_FORMAT_OBJECT },
+      );
+      if (!result.rows || result.rows.length === 0) return null;
+      return result.rows[0];
+    } finally {
+      await connection.close();
+    }
   }
 
   async update(id: number, data: any) {
-    const user = await this.findOne(id);
-    Object.assign(user, data);
-    return this.userRepo.save(user);
+    await this.findOne(id);
+    const connection = await getConnection();
+    try {
+      await connection.execute(
+        `UPDATE USERS SET full_name = :fullName, email = :email, role = :role,
+         reg_number = :regNumber, phone = :phone WHERE id = :id`,
+        {
+          fullName: data.name,
+          email: data.email,
+          role: data.role,
+          regNumber: data.idNumber,
+          phone: data.phoneNumber,
+          id,
+        },
+        { autoCommit: true },
+      );
+      return { id, ...data };
+    } finally {
+      await connection.close();
+    }
   }
 
   async remove(id: number) {
-    const user = await this.findOne(id);
-    return this.userRepo.remove(user);
+    await this.findOne(id);
+    const connection = await getConnection();
+    try {
+      await connection.execute(
+        `DELETE FROM USERS WHERE id = :id`,
+        [id],
+        { autoCommit: true },
+      );
+      return { message: `User #${id} deleted successfully` };
+    } finally {
+      await connection.close();
+    }
   }
 }
