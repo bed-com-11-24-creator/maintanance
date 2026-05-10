@@ -4,11 +4,13 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { initDB } from './database/database.providers';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
   await initDB();
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -19,10 +21,15 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: "*",
+    origin: '*',
   });
 
   app.setGlobalPrefix('api');
+
+  // Serve uploaded files statically at /uploads
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads',
+  });
 
   const config = new DocumentBuilder()
     .setTitle('Maintenance API')
