@@ -42,7 +42,6 @@ export class IssuesController {
     return this.issuesService.findAll({ status, urgency, category });
   }
 
-  @Roles(UserRole.STUDENT)
   @Get('my')
   findMy(@Req() req: any) {
     return this.issuesService.findMy(req.user.userId);
@@ -78,8 +77,6 @@ export class IssuesController {
   ) {
     return this.issuesService.addManualTimelineEntry(id, event, description);
   }
-
-  // ─── Photo Upload ──────────────────────────────────────────────────────────
 
   @Post(':id/photos')
   @UseInterceptors(FileInterceptor('photo', { storage: photoStorage }))

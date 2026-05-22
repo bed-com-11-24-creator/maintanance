@@ -52,7 +52,7 @@ export class AuthService {
     };
   }
 
-  async findMe(userId: number) {
+  async findMe(userId: string) {
     return this.usersService.findOne(userId);
   }
 

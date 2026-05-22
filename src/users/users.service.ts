@@ -44,7 +44,7 @@ export class UsersService {
     }
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const connection = await getConnection();
     try {
       const result = await connection.execute(
@@ -89,7 +89,7 @@ export class UsersService {
     }
   }
 
-  async update(id: number, data: any) {
+  async update(id: string, data: any) {
     await this.findOne(id);
     const connection = await getConnection();
     try {
@@ -97,11 +97,11 @@ export class UsersService {
         `UPDATE USERS SET full_name = :fullName, email = :email, role = :role,
          reg_number = :regNumber, phone = :phone WHERE id = :id`,
         {
-          fullName: data.name,
-          email: data.email,
-          role: data.role,
-          regNumber: data.idNumber,
-          phone: data.phoneNumber,
+          fullName: data.FULL_NAME ?? data.fullName ?? data.name ?? null,
+          email: data.EMAIL ?? data.email ?? null,
+          role: data.ROLE ?? data.role ?? null,
+          regNumber: data.REG_NUMBER ?? data.regNumber ?? data.idNumber ?? null,
+          phone: data.PHONE ?? data.phone ?? data.phoneNumber ?? null,
           id,
         },
         { autoCommit: true },
@@ -112,7 +112,7 @@ export class UsersService {
     }
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     await this.findOne(id);
     const connection = await getConnection();
     try {

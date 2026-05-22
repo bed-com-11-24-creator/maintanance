@@ -1,11 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { getConnection } from '../database/database.providers';
+import { CreateInventoryDto } from './dto/create-inventory.dto';
+import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import oracledb from 'oracledb';
 
 @Injectable()
 export class InventoryService {
 
-  async create(dto: any) {
+  async create(dto: CreateInventoryDto) {
+    if (!dto || !dto.name) { 
+      throw new BadRequestException('Request body is missing or invalid');
+    }
     const connection = await getConnection();
     try {
       const result = await connection.execute(
@@ -60,7 +65,7 @@ export class InventoryService {
     }
   }
 
-  async update(id: number, dto: any) {
+  async update(id: number, dto: UpdateInventoryDto) {
     await this.findOne(id);
     const connection = await getConnection();
     try {
